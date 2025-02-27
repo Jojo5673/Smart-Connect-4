@@ -1,6 +1,7 @@
 from operator import truediv
-
+import pygame
 import numpy as np
+import game_func as gf
 
 def create_board(size):
     return np.zeros(size) #gets a matrix from numpy
@@ -63,14 +64,19 @@ def check_win(pos, player):
     else:
         return False
 
-
+pygame.init()
 height, width = 6,7
+screen_dims = (1280,720)
 board = create_board((height, width))
 game_over = False
 turn = 0
+pygame.display.set_caption('Connect 4')
+screen = pygame.display.set_mode(screen_dims)
+
 #initialises board and game variables
 
 while not game_over:
+    gf.check_events()
     draw_board(board)
     #players are stored as 0 and 1, but outputted as 1 and 2
     selection = int(input(f"Player {turn+1}'s move: "))
