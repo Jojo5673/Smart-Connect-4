@@ -97,7 +97,7 @@ def udpate_screen():
         pygame.draw.rect(screen, color, rect, border_radius=padding)
         top = rect.top
         for j in range(b_height):
-            hole_color = hole_colors[j][i]
+            hole_color = hole_colors[b_height - 1 - j][i]
             hole = pygame.draw.circle(screen, hole_color, (rect.left + hdiv // 2, top + hdiv // 2), hdiv // 2 - padding / 2)
             top += hdiv
 
