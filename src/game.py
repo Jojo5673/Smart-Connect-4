@@ -13,8 +13,8 @@ import random
 #             random.randint(0, 255))
 
 player_col = {
-    0: (52, 179, 102),
-    1: (179, 52, 52),
+    1: (52, 179, 102), #green
+    2: (179, 52, 52), #red
 }
 pygame.init()
 pygame.display.set_caption("Connect 4")
@@ -43,7 +43,7 @@ def check_events():
             for i, rect in enumerate(columns):
                 if rect.collidepoint(mouse_pos):
                     hole = gb.advance_turn(i)
-                    hole_colors[hole[0]][hole[1]] = player_col[gb.turn]
+                    hole_colors[hole[0]][hole[1]] = player_col[gb.turn + 1]
 
 def draw_screen():
     global columns

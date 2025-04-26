@@ -11,7 +11,7 @@ class Board:
 
     def draw_board(self, game_board):
         print(np.flip(game_board, 0)) #makes the game play from bottom up like real connect 4
-        #print(' ', *map(lambda i: str(i)+' ',list(range(len(game_board[0])))))  #draws the matrix of zeros with correct spacing
+        print(' ', *map(lambda i: str(i)+' ',list(range(len(game_board[0])))))  #draws the matrix of zeros with correct spacing
 
     def can_drop(self, row, column):
         #print(row - 1, column)
@@ -34,9 +34,10 @@ class Board:
         #checks the adjacent board positions except (0,0) which is the position being tested
         for i in [-1,0,1]:
             for j in [-1,0,1]:
-                if check_at((pos[0] + i,pos[1] + j), player) and (i,j) != (0,0):
-                    #if a piece is found at an adjacent position it is added to step vectors
-                    step_vectors.append((i,j))
+                if pos[0] != self.height - 1 and pos[1] != self.width - 1:
+                    if check_at((pos[0] + i,pos[1] + j), player) and (i,j) != (0,0):
+                        #if a piece is found at an adjacent position it is added to step vectors
+                        step_vectors.append((i,j))
 
         for step in step_vectors: #goes through the directions of all adjacent pieces and explores them in a loop
             search = True
@@ -46,8 +47,9 @@ class Board:
                 #a new board position is created for testing by adding the direction vector to the start position
                 new_pos = (new_pos[0]+step[0], new_pos[1]+step[1])
                 #print(new_pos)
-                if check_at(new_pos, player): #if the player is found at the new position the length of the connect is incremented
-                    depth+=1
+                if new_pos[0] != self.height - 1 and new_pos[1] != self.width - 1:
+                    if check_at(new_pos, player): #if the player is found at the new position the length of the connect is incremented
+                        depth+=1
                 else:
                     search = False #stops searching at the end of the connect
                     longest = max(longest, depth+1) #stores the longest connect found
@@ -71,7 +73,6 @@ class Board:
         #returns the location of the dropped piece if its a valid move else false
 
     def advance_turn(self, selection):
-        self.draw_board(self.board)
         #players are stored as 0 and 1, but outputted as 1 and 2
         drop = self.drop_piece(selection) #stores the position of the dropped piece
         if not drop:
@@ -82,4 +83,5 @@ class Board:
                 print(f"Player {self.turn + 1} wins!")
                 self.game_over = True
             self.turn = (self.turn+1)%2 #alternates the turn between 0 and 1
+        self.draw_board(self.board)
         return drop
