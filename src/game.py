@@ -7,16 +7,22 @@ import settings
 from board import Board
 import random
 
-def random_color():
-    return (random.randint(0, 255),
-            random.randint(0, 255),
-            random.randint(0, 255))
+# def random_color():
+#     return (random.randint(0, 255),
+#             random.randint(0, 255),
+#             random.randint(0, 255))
 
+player_col = {
+    0: (52, 179, 102),
+    1: (179, 52, 52),
+}
 pygame.init()
 pygame.display.set_caption("Connect 4")
 screen = pygame.display.set_mode((settings.SCREEN_DIMS))
 columns = []
+hole_colors = []
 clock = pygame.time.Clock()
+gb = Board()
 
 def draw_fps():
     clock.tick()
@@ -30,8 +36,14 @@ def draw_fps():
 
 def check_events():
     for event in pygame.event.get():
+        mouse_pos = pygame.mouse.get_pos()
         if event.type == pygame.QUIT:
             sys.exit()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            for i, rect in enumerate(columns):
+                if rect.collidepoint(mouse_pos):
+                    hole = gb.advance_turn(i)
+                    hole_colors[hole[0]][hole[1]] = player_col[gb.turn]
 
 def draw_screen():
     global columns
@@ -53,13 +65,17 @@ def draw_screen():
     board_rect = pygame.Rect(board_left, board_top, b_width*hdiv, b_height*hdiv)
     board = pygame.Rect(board_left - padding, board_top - padding, board_rect.width + 2 * padding , board_rect.height + 2 * padding)
     pygame.draw.rect(screen, (67, 146, 186), board, border_radius=padding)
+    for row in range(b_height):
+        hole_colors.append([])
 
     left = board_rect.left
     for i in range(b_width):
         top = board_rect.top
+        col = []
         for j in range(b_height):
             hole = pygame.draw.circle(screen, bg_col, (left+hdiv//2, top+hdiv//2), hdiv//2-padding/2)
             top += hdiv
+            hole_colors[j].append(bg_col)
         column = pygame.Rect(left, board_rect.top, hdiv, board_rect.height)
         # screen.fill(random_color(), column)
         columns.append(column)
@@ -81,10 +97,10 @@ def udpate_screen():
         pygame.draw.rect(screen, color, rect, border_radius=padding)
         top = rect.top
         for j in range(b_height):
-            hole = pygame.draw.circle(screen, bg_col, (rect.left + hdiv // 2, top + hdiv // 2), hdiv // 2 - padding / 2)
+            hole_color = hole_colors[j][i]
+            hole = pygame.draw.circle(screen, hole_color, (rect.left + hdiv // 2, top + hdiv // 2), hdiv // 2 - padding / 2)
             top += hdiv
 
-gb = Board()
 draw_screen()
 pygame.display.flip()
 
@@ -93,6 +109,5 @@ while True:
     udpate_screen()
     draw_fps()
     pygame.display.flip()
-
-    # if not gb.game_over:
-    #     gb.advance_turn()
+    if gb.game_over:
+        sys.exit()

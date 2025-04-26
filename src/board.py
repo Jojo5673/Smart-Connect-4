@@ -11,7 +11,7 @@ class Board:
 
     def draw_board(self, game_board):
         print(np.flip(game_board, 0)) #makes the game play from bottom up like real connect 4
-        print(' ', *map(lambda i: str(i)+' ',list(range(len(game_board[0])))))  #draws the matrix of zeros with correct spacing
+        #print(' ', *map(lambda i: str(i)+' ',list(range(len(game_board[0])))))  #draws the matrix of zeros with correct spacing
 
     def can_drop(self, row, column):
         #print(row - 1, column)
@@ -70,10 +70,9 @@ class Board:
         return (c,pos)
         #returns the location of the dropped piece if its a valid move else false
 
-    def advance_turn(self):
+    def advance_turn(self, selection):
         self.draw_board(self.board)
         #players are stored as 0 and 1, but outputted as 1 and 2
-        selection = int(input(f"Player {self.turn+1}'s move: "))
         drop = self.drop_piece(selection) #stores the position of the dropped piece
         if not drop:
             print("invalid move") #if drop returns false the move is invalud
@@ -83,3 +82,4 @@ class Board:
                 print(f"Player {self.turn + 1} wins!")
                 self.game_over = True
             self.turn = (self.turn+1)%2 #alternates the turn between 0 and 1
+        return drop
