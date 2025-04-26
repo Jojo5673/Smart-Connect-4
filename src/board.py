@@ -22,9 +22,10 @@ class Board:
         #works by getting the location of the most recent move and its player and checking its immediate surroundings for the player's peices
         #every location is taken and explored in its relative direction from the most recent move for 4 consecutive pieces in that direction
         def check_at(check_pos, player): #helper function to check for the player that made the move at specific locations
-            if self.board[check_pos[0]][check_pos[1]] and self.board[check_pos[0]][check_pos[1]] == player:
-                #checks if the test position exists on the baord and if there is a player there
-                return True
+            if check_pos[0] != self.height and check_pos[1] != self.width :
+                if self.board[check_pos[0]][check_pos[1]] and self.board[check_pos[0]][check_pos[1]] == player:
+                    #checks if the test position exists on the baord and if there is a player there
+                    return True
             else:
                 return False
 
@@ -34,10 +35,9 @@ class Board:
         #checks the adjacent board positions except (0,0) which is the position being tested
         for i in [-1,0,1]:
             for j in [-1,0,1]:
-                if pos[0] != self.height - 1 and pos[1] != self.width - 1:
-                    if check_at((pos[0] + i,pos[1] + j), player) and (i,j) != (0,0):
-                        #if a piece is found at an adjacent position it is added to step vectors
-                        step_vectors.append((i,j))
+                if check_at((pos[0] + i,pos[1] + j), player) and (i,j) != (0,0):
+                    #if a piece is found at an adjacent position it is added to step vectors
+                    step_vectors.append((i,j))
 
         for step in step_vectors: #goes through the directions of all adjacent pieces and explores them in a loop
             search = True
@@ -47,9 +47,9 @@ class Board:
                 #a new board position is created for testing by adding the direction vector to the start position
                 new_pos = (new_pos[0]+step[0], new_pos[1]+step[1])
                 #print(new_pos)
-                if new_pos[0] != self.height - 1 and new_pos[1] != self.width - 1:
-                    if check_at(new_pos, player): #if the player is found at the new position the length of the connect is incremented
-                        depth+=1
+                #if new_pos[0] != self.height - 1 and new_pos[1] != self.width - 1:
+                if check_at(new_pos, player): #if the player is found at the new position the length of the connect is incremented
+                    depth+=1
                 else:
                     search = False #stops searching at the end of the connect
                     longest = max(longest, depth+1) #stores the longest connect found
