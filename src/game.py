@@ -7,11 +7,8 @@ import utility
 pygame.init()
 pygame.display.set_caption("Connect 4")
 screen = pygame.display.set_mode((settings.SCREEN_DIMS))
+game_active = True
 
-player_col = {
-    1: (52, 179, 102), #green
-    2: (179, 52, 52), #red
-}
 active_pos = {
     1: (settings.SCREEN_DIMS[0]//4, screen.get_rect().top + settings.HEIGHT_DIV // 2),
     2: (3 * settings.SCREEN_DIMS[0]//4, screen.get_rect().top + settings.HEIGHT_DIV // 2)
@@ -23,6 +20,9 @@ clock = pygame.time.Clock()
 bot = utility.circle_crop_image(pygame.image.load("assets/images/robot.png").convert_alpha())
 person = utility.circle_crop_image(pygame.image.load("assets/images/you.png").convert_alpha())
 gb = Board()
+
+def draw_play_button():
+    pass
 
 def draw_fps():
     clock.tick()
@@ -43,7 +43,7 @@ def check_events():
             for i, rect in enumerate(columns):
                 if rect.collidepoint(mouse_pos):
                     hole = gb.advance_turn(i)
-                    hole_colors[hole[0]][hole[1]] = player_col[gb.turn + 1]
+                    hole_colors[hole[0]][hole[1]] = settings.PLAYER_COLORS[gb.turn + 1]
 
 def draw_screen():
     global columns, players_rect
@@ -69,7 +69,6 @@ def draw_screen():
     left = board_rect.left
     for i in range(b_width):
         top = board_rect.top
-        col = []
         for j in range(b_height):
             hole = pygame.draw.circle(screen, bg_col, (left+hdiv//2, top+hdiv//2), hdiv//2-padding/2)
             top += hdiv
@@ -82,10 +81,8 @@ def draw_screen():
 def udpate_screen():
     global bot, person
     hdiv = settings.HEIGHT_DIV
-    b_width = settings.BOARD_WIDTH
     b_height = settings.BOARD_HEIGHT
     screen_quarter = settings.SCREEN_DIMS[0]//4
-    bg_col = settings.BG_COLOR
     padding = settings.PADDING
     mouse_pos = pygame.mouse.get_pos()
 
@@ -94,10 +91,10 @@ def udpate_screen():
 
     bot = pygame.transform.scale(bot, (hdiv - 2*padding, hdiv - 2*padding))
     person = pygame.transform.scale(person, (hdiv - 2*padding, hdiv - 2*padding))
-    player_circle = pygame.draw.circle(screen, player_col[2], (screen_quarter, screen.get_rect().top + hdiv//2),
-                                       hdiv//2 - padding)
-    ai_circle = pygame.draw.circle(screen, player_col[1], (screen_quarter * 3, screen.get_rect().top + hdiv//2),
-                                   hdiv//2 - padding)
+    player_circle = pygame.draw.circle(screen, settings.PLAYER_COLORS[2], (screen_quarter, screen.get_rect().top + hdiv // 2),
+                                       hdiv // 2 - padding)
+    ai_circle = pygame.draw.circle(screen, settings.PLAYER_COLORS[1], (screen_quarter * 3, screen.get_rect().top + hdiv // 2),
+                                   hdiv // 2 - padding)
     screen.blit(bot, bot.get_rect(center=(screen_quarter * 3, screen.get_rect().top + hdiv//2)))
     screen.blit(person, person.get_rect(center=(screen_quarter, screen.get_rect().top + hdiv//2)))
 
@@ -122,5 +119,5 @@ while True:
     draw_fps()
     pygame.display.flip()
     if gb.game_over:
-        pass
+        game_active = False
         sys.exit()

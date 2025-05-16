@@ -96,7 +96,7 @@ class Board:
         else:
             if self.check_win(drop, self.turn + 1): #checks every dropped piece for a winning move
                 #self.draw_board(self.board)
-                print(f"Player {self.turn + 1} wins! at {drop}")
+                print(f"You win at {drop}" if self.turn == 0 else f"You lose at {drop}")
                 self.game_over = True
             self.turn = (self.turn+1)%2 #alternates the turn between 0 and 1
         #self.draw_board(self.board)
