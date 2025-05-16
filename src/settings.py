@@ -1,11 +1,21 @@
+#dims
 BOARD_HEIGHT, BOARD_WIDTH = 6,7
 SCREEN_DIMS = (1200, 800)
 HEIGHT_DIV = 800//9
+PADDING = 10
+BTN_PADDING = (40, 20)
+
+
+#colors
 BG_COLOR = (39, 37, 46)
 BTN_COLOR = (50, 168, 94)
+TEXT_COLOR = (255, 255, 255)
 PLAYER_RECT_COLOR = (67, 146, 186)
-PADDING = 10
 PLAYER_COLORS = {
-    1: (52, 179, 102), #green
-    2: (179, 52, 52), #red
+    2: (52, 179, 102), #green
+    1: (179, 52, 52), #red
 }
+
+
+#misc
+FPS_TICK_LIMIT = 500

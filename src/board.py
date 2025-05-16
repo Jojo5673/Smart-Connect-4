@@ -9,6 +9,7 @@ class Board:
         self.board =  np.zeros((self.height, self.width))
         self.game_over = False
         self.turn = random.choice((0, 1))
+        self.msg = "Your turn" if self.turn == 0 else "Bot's turn"
 
     def draw_board(self, game_board):
         print(np.flip(game_board, 0)) #makes the game play from bottom up like real connect 4
@@ -96,8 +97,11 @@ class Board:
         else:
             if self.check_win(drop, self.turn + 1): #checks every dropped piece for a winning move
                 #self.draw_board(self.board)
+                self.msg = f"You win" if self.turn == 0 else f"You lose"
                 print(f"You win at {drop}" if self.turn == 0 else f"You lose at {drop}")
                 self.game_over = True
-            self.turn = (self.turn+1)%2 #alternates the turn between 0 and 1
+            else:
+                self.msg = "Your turn" if self.turn == 1 else "Bot's turn"
+            self.turn = (self.turn + 1) % 2  # alternates the turn between 0 and 1
         #self.draw_board(self.board)
         return drop
