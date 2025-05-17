@@ -19,14 +19,14 @@ active_pos = {
 }
 columns = []
 hole_colors = []
-PLAYER = 0
-BOT = 1
+PLAYER = settings.PLAYER
+BOT = settings.BOT
 
 players_rect = pygame.Rect(screen.get_rect().left, screen.get_rect().top, screen.get_rect().width, 1 * settings.HEIGHT_DIV)
 bot = utility.circle_crop_image(pygame.image.load("assets/images/robot.png").convert_alpha())
 person = utility.circle_crop_image(pygame.image.load("assets/images/you.png").convert_alpha())
 gb = Board()
-ai = AI(gb.board)
+ai = AI(gb)
 executor = ThreadPoolExecutor(max_workers=2)
 future = None
 
@@ -174,7 +174,7 @@ while True:
             update_screen()
         draw_message(gb.msg)
         if gb.turn == BOT and future is None:
-            ai.board = gb.board
+            ai.gb = gb
             future = executor.submit(ai.get_move)
         elif future and future.done():
             move = future.result()

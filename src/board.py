@@ -2,6 +2,10 @@ import numpy as np
 import settings
 import random
 
+def draw_board(game_board):
+    print(np.flip(game_board, 0)) #makes the game play from bottom up like real connect 4
+    print(' ', *map(lambda i: str(i)+' ',list(range(len(game_board[0])))))  #draws the matrix of zeros with correct spacing
+
 class Board:
     def __init__(self):
         self.height, self.width = settings.BOARD_HEIGHT, settings.BOARD_WIDTH
@@ -11,37 +15,42 @@ class Board:
         self.turn = random.choice((0, 1))
         self.msg = "Your turn" if self.turn == 0 else "Bot's turn"
 
-    def draw_board(self, game_board):
-        print(np.flip(game_board, 0)) #makes the game play from bottom up like real connect 4
-        print(' ', *map(lambda i: str(i)+' ',list(range(len(game_board[0])))))  #draws the matrix of zeros with correct spacing
-
     def can_drop(self, row, column):
         #print(row - 1, column)
         return self.board[row][column] == 0 #tests if the board is empty at a position
 
     def check_win(self, pos, player):
         #this function checks if every new move is a winning move
-        #works by getting the location of the most recent move and its player and checking its immediate surroundings for the player's peices
-        #every location is taken and explored in its relative direction from the most recent move for 4 consecutive pieces in that direction
-        def check_at(check_pos, player): #helper function to check for the player that made the move at specific locations
+        lengths = self.get_connect_lengths(player, pos)
+
+        if len(lengths)>0 and max(lengths) >= 4: #when a connect of 4 pieces is found then the player has won
+            #print(f"winning move for{player} at {pos}")
+            return True
+        else:
+            #print(f"{player} does not win at {pos}")
+            return False
+
+    def get_connect_lengths(self, player, pos):
+        # works by getting the location of the most recent move and its player and checking its immediate surroundings for the player's peices
+        # every location is taken and explored in its relative direction from the most recent move for 4 consecutive pieces in that direction
+        def check_at(check_pos):  # helper function to check for the player that made the move at specific locations
             if check_pos[0] != self.height and check_pos[1] != self.width and check_pos[0] != -1 and check_pos[1] != -1:
                 if self.board[check_pos[0]][check_pos[1]] and self.board[check_pos[0]][check_pos[1]] == player:
-                    #checks if the test position exists on the baord and if there is a player there
+                    # checks if the test position exists on the baord and if there is a player there
                     return True
             else:
                 return False
 
-        #makes a list of the direction of all the adjacent pieces to the most recent drop
+        # makes a list of the direction of all the adjacent pieces to the most recent drop
         step_vectors = []
-        longest = 1 #keeps track of the longest line of connects
-        #checks the adjacent board positions except (0,0) which is the position being tested
-        for i in [-1,0,1]:
-            for j in [-1,0,1]:
-                if check_at((pos[0] + i,pos[1] + j), player) and (i,j) != (0,0):
-                    #if a piece is found at an adjacent position it is added to step vectors
-                    step_vectors.append((i,j))
-
-        for step in step_vectors: #goes through the directions of all adjacent pieces and explores them in a loop
+        connect_lengths = []  # keeps track of the lines of connects
+        # checks the adjacent board positions except (0,0) which is the position being tested
+        for i in [-1, 0, 1]:
+            for j in [-1, 0, 1]:
+                if check_at((pos[0] + i, pos[1] + j)) and (i, j) != (0, 0):
+                    # if a piece is found at an adjacent position it is added to step vectors
+                    step_vectors.append((i, j))
+        for step in step_vectors:  # goes through the directions of all adjacent pieces and explores them in a loop
             forward = 0
             backward = 0
 
@@ -49,34 +58,28 @@ class Board:
             step_pos = pos
             depth = 0
             while search:
-                #a new board position is created for testing by adding the direction vector to the start position
-                step_pos = (step_pos[0]+step[0], step_pos[1]+step[1])
-                #print(step_pos)
-                #if step_pos[0] != self.height - 1 and step_pos[1] != self.width - 1:
-                if check_at(step_pos, player): #if the player is found at the new position the length of the connect is incremented
-                    depth+=1
+                # a new board position is created for testing by adding the direction vector to the start position
+                step_pos = (step_pos[0] + step[0], step_pos[1] + step[1])
+                # print(step_pos)
+                # if step_pos[0] != self.height - 1 and step_pos[1] != self.width - 1:
+                if check_at(step_pos):  # if the player is found at the new position the length of the connect is incremented
+                    depth += 1
                 else:
-                    search = False #stops searching at the end of the connect
-                    forward = depth #stores the longest connect found
+                    search = False  # stops searching at the end of the connect
+                    forward = depth  # stores the longest connect found
 
             step_pos = pos
             depth = 0
             search = True
             while search:
                 step_pos = (step_pos[0] - step[0], step_pos[1] - step[1])
-                if check_at(step_pos, player):
+                if check_at(step_pos):
                     depth += 1
                 else:
                     search = False
                     backward = depth
-            longest = max(forward + backward + 1, longest)
-
-        if longest >= 4: #when a connect of 4 pieces is found then the player has won
-            return True
-        else:
-            return False
-
-
+            connect_lengths.append(forward + backward + 1)
+        return connect_lengths
 
     #initialises board and game variables
     def drop_piece(self, pos):
