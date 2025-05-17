@@ -1,27 +1,35 @@
-import pygame
-import sys
+import pygame, sys
 import settings
+from concurrent.futures import ThreadPoolExecutor
+
+from ai import AI
 from board import Board
 import utility
 
 pygame.init()
 pygame.display.set_caption("Connect 4")
+clock = pygame.time.Clock()
 screen = pygame.display.set_mode((settings.SCREEN_DIMS))
 game_active = False
 fps_ticks = 0
 curr_fps = 0
-
 active_pos = {
     1: (settings.SCREEN_DIMS[0]//4, screen.get_rect().top + settings.HEIGHT_DIV // 2),
     2: (3 * settings.SCREEN_DIMS[0]//4, screen.get_rect().top + settings.HEIGHT_DIV // 2)
 }
-players_rect = pygame.Rect(screen.get_rect().left, screen.get_rect().top, screen.get_rect().width, 1 * settings.HEIGHT_DIV)
 columns = []
 hole_colors = []
-clock = pygame.time.Clock()
+PLAYER = 0
+BOT = 1
+
+players_rect = pygame.Rect(screen.get_rect().left, screen.get_rect().top, screen.get_rect().width, 1 * settings.HEIGHT_DIV)
 bot = utility.circle_crop_image(pygame.image.load("assets/images/robot.png").convert_alpha())
 person = utility.circle_crop_image(pygame.image.load("assets/images/you.png").convert_alpha())
 gb = Board()
+ai = AI(gb.board)
+executor = ThreadPoolExecutor(max_workers=2)
+future = None
+
 
 def draw_button(msg):
     font = pygame.font.SysFont(None, 48)
@@ -70,19 +78,22 @@ def draw_fps():
     screen.fill((settings.PLAYER_RECT_COLOR), fps_bg)
     screen.blit(fps_surface, (10, 10))
 
+def place_at(col):
+    hole = gb.advance_turn(col)
+    hole_colors[hole[0]][hole[1]] = settings.PLAYER_COLORS[gb.turn + 1]
+
 def check_events():
     for event in pygame.event.get():
         mouse_pos = pygame.mouse.get_pos()
         if event.type == pygame.QUIT:
+            executor.shutdown()
             sys.exit()
         if event.type == pygame.MOUSEBUTTONDOWN:
             check_button(*mouse_pos)
-            if game_active:
+            if game_active and gb.turn == PLAYER:
                 for i, rect in enumerate(columns):
                     if rect.collidepoint(mouse_pos):
-                        hole = gb.advance_turn(i)
-                        hole_colors[hole[0]][hole[1]] = settings.PLAYER_COLORS[gb.turn + 1]
-
+                        place_at(i)
 
 def draw_screen():
     global columns, players_rect
@@ -148,13 +159,13 @@ def update_screen():
             hole_color = hole_colors[b_height - 1 - j][i]
             pygame.draw.circle(screen, hole_color, (rect.left + hdiv // 2, top + hdiv // 2), hdiv // 2 - padding / 2)
             top += hdiv
+    draw_fps()
 
 draw_screen()
 pygame.display.flip()
 
 while True:
     check_events()
-    draw_fps()
     if game_active:
         if gb.game_over:
             update_screen()
@@ -162,6 +173,14 @@ while True:
         else:
             update_screen()
         draw_message(gb.msg)
+        if gb.turn == BOT and future is None:
+            ai.board = gb.board
+            future = executor.submit(ai.get_move)
+        elif future and future.done():
+            move = future.result()
+            place_at(move)
+            future = None
     else:
-        draw_button("Play")
+        button_rect = draw_button("Play")
     pygame.display.flip()
+    clock.tick(settings.FPS)
