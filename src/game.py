@@ -66,7 +66,6 @@ def draw_message(msg):
 
 def draw_fps():
     global fps_ticks, curr_fps
-    clock.tick()
     fps_ticks += 1
     if fps_ticks > settings.FPS_TICK_LIMIT:
         curr_fps = int(clock.get_fps())
@@ -80,7 +79,11 @@ def draw_fps():
 
 def place_at(col):
     hole = gb.advance_turn(col)
+    # try:
     hole_colors[hole[0]][hole[1]] = settings.PLAYER_COLORS[gb.turn + 1]
+    # except TypeError:
+    #     hole_colors[hole[0]][hole[1]] = settings.PLAYER_COLORS[gb.turn + 1]
+
 
 def check_events():
     for event in pygame.event.get():

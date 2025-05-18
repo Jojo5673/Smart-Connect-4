@@ -17,7 +17,10 @@ class Board:
 
     def can_drop(self, row, column):
         #print(row - 1, column)
+        # try:
         return self.board[row][column] == 0 #tests if the board is empty at a position
+        # except IndexError:
+        #     return self.board[row][column] == 0
 
     def check_win(self, pos, player):
         #this function checks if every new move is a winning move
