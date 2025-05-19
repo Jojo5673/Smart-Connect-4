@@ -79,10 +79,10 @@ def draw_fps():
 
 def place_at(col):
     hole = gb.advance_turn(col)
-    # try:
-    hole_colors[hole[0]][hole[1]] = settings.PLAYER_COLORS[gb.turn + 1]
-    # except TypeError:
-    #     hole_colors[hole[0]][hole[1]] = settings.PLAYER_COLORS[gb.turn + 1]
+    try:
+     hole_colors[hole[0]][hole[1]] = settings.PLAYER_COLORS[gb.turn + 1]
+    except TypeError:
+     hole_colors[hole[0]][hole[1]] = settings.PLAYER_COLORS[gb.turn + 1]
 
 
 def check_events():
@@ -181,6 +181,7 @@ while True:
             future = executor.submit(ai.get_move)
         elif future and future.done():
             move = future.result()
+            print(f"ai chose {move}")
             place_at(move)
             future = None
     else:

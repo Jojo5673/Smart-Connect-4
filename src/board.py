@@ -94,6 +94,8 @@ class Board:
         self.board[c][pos] = self.turn+1 #places the value of the player at the drop position
         return (c,pos)
         #returns the location of the dropped piece if its a valid move else false
+    def undo (self, piece):
+        self.board[piece[0]][piece[1]] = 0
 
     def advance_turn(self, selection):
         #players are stored as 0 and 1, but outputted as 1 and 2
