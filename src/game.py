@@ -1,4 +1,4 @@
-import pygame, sys
+import pygame, sys, time
 import settings
 from concurrent.futures import ThreadPoolExecutor
 
@@ -167,6 +167,7 @@ def update_screen():
 draw_screen()
 pygame.display.flip()
 
+start, end = 0, 0
 while True:
     check_events()
     if game_active:
@@ -176,14 +177,17 @@ while True:
         else:
             update_screen()
         draw_message(gb.msg)
-        if gb.turn == BOT and future is None:
-            ai.gb = gb
-            future = executor.submit(ai.get_move)
-        elif future and future.done():
-            move = future.result()
-            print(f"ai chose {move}")
-            place_at(move)
-            future = None
+        if gb.turn == BOT:
+            if future is None:
+                ai.gb = gb
+                start = time.time()
+                future = executor.submit(ai.get_move, settings.BOT)
+            elif future.done():
+                move = future.result()
+                end = time.time()
+                print(f"ai chose {move} in {round(end - start, 6)} seconds")
+                place_at(move)
+                future = None
     else:
         button_rect = draw_button("Play")
     pygame.display.flip()
