@@ -3,7 +3,20 @@
  Developing a connect 4 ai in python
 
 ## Goals
+- Develop a fully functional connect 4 game with ui ✅
+- Develop an algorithm that can calculate moves and play the game ✅
+- Have the ai play at a high level ✅
 
-- Develop a fully functional connect 4 game with ui
-- Develop an algorithm that can calculate moves and play the game
-- Have the ai play at a high level
+## Todo:
+- Selective difficulty
+- alpha-beta optimization
+
+
+## Using the project:
+### for devs:
+
+- Project files in src folder
+
+### anyone else:
+
+- download and run game.exe in the dist folder
