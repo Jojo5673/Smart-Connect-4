@@ -1,22 +1,26 @@
 # Smart Connect 4
 
- Developing a connect 4 ai in python
+A single player **Connect 4** game built using **Python**, **Pygame**, and the **Minimax Algorithm** for move evaluation. Features an intelligent bot that evaluates moves ahead to block your wins and secure its own.
 
-## Goals
-- Develop a fully functional connect 4 game with ui ✅
-- Develop an algorithm that can calculate moves and play the game ✅
-- Have the ai play at a high level ✅
+![Screenshot](assets/img.png) <!-- Replace with actual screenshot path if needed -->
+
+## Features
+- Single-player Connect 4 gameplay
+- AI opponent powered by a depth-limited minimax algorithm
+- Smart move scoring for blocking and winning
+- Pygame-powered GUI
+
+## Using the project:
+### Devs:
+
+- Project files in src folder
+- Required packages: numpy, pygame
+
+### Anyone else:
+
+- download and run game.exe in the dist folder
+
 
 ## Todo:
 - Selective difficulty
 - alpha-beta optimization
-
-
-## Using the project:
-### for devs:
-
-- Project files in src folder
-
-### anyone else:
-
-- download and run game.exe in the dist folder
