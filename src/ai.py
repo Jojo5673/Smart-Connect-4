@@ -1,11 +1,11 @@
-import random, time, numpy as np
+import random, time, math, numpy as np
 import settings
 
 def score_window(window, piece):
     opp = 1 - piece
     score = 0
     if window.count(piece + 1) == 4:
-        score += 500
+        score += 1500
     elif window.count(piece + 1) == 3 and window.count(0) == 1:
         score += 80
     elif window.count(piece + 1) == 2 and window.count(0) == 2:
@@ -24,14 +24,14 @@ class AI:
         self.gb = board
 
     def get_move(self, piece):
-        time.sleep(1)
         moves = []
         valid_moves = self.gb.get_valid_moves()
         best_col = random.choice(valid_moves)
-        best_score = -10e6
+        best_score = -math.inf
         for col in valid_moves:
             pos = self.gb.drop_piece(col, piece)
-            score = self.score_position(piece) - self.opp_best_score_after_play(1-piece)
+            # score = self.score_position(piece) - self.opp_best_score_after_play(1-piece)
+            score = self.evaluate(piece, 2)
             print((col, score))
             if score > best_score:
                 best_score = score
@@ -46,6 +46,25 @@ class AI:
             if c >= self.gb.height:  # if the column is full the move is invalid
                 return False
         return (c, col)
+
+    def evaluate(self, piece, depth):
+        player_score = self.score_position(piece)
+        if depth == 0 or self.gb.return_game_over():
+            return player_score
+
+            #for opponent
+        opp_piece =  1 - piece
+        best_opp_score = -math.inf
+        valid_moves = self.gb.get_valid_moves()
+        # best_opp_col = 0
+        for col in valid_moves:
+            pos = self.gb.drop_piece(col, opp_piece)
+            score = self.evaluate(opp_piece, depth - 1)
+            if score > best_opp_score:
+                best_opp_score = score
+                # best_opp_col = col
+            self.gb.undo(pos)
+        return player_score - best_opp_score
 
     def opp_best_score_after_play(self, piece):
         best_score = -10e6

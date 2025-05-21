@@ -116,6 +116,8 @@ class Board:
             #self.draw_board(self.board)
         return drop
 
+    def return_game_over(self):
+        return self.game_over
 
 
 
