@@ -176,18 +176,18 @@ while True:
             game_active = False
         else:
             update_screen()
+            if gb.turn == BOT:
+                if future is None:
+                    ai.gb = gb
+                    start = time.time()
+                    future = executor.submit(ai.get_move, settings.BOT)
+                elif future.done():
+                    move = future.result()
+                    end = time.time()
+                    print(f"ai chose {move} in {round(end - start, 6)} seconds")
+                    place_at(move)
+                    future = None
         draw_message(gb.msg)
-        if gb.turn == BOT:
-            if future is None:
-                ai.gb = gb
-                start = time.time()
-                future = executor.submit(ai.get_move, settings.BOT)
-            elif future.done():
-                move = future.result()
-                end = time.time()
-                print(f"ai chose {move} in {round(end - start, 6)} seconds")
-                place_at(move)
-                future = None
     else:
         button_rect = draw_button("Play")
     pygame.display.flip()
