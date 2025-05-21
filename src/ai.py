@@ -22,6 +22,7 @@ def score_window(window, piece):
 class AI:
     def __init__(self, board):
         self.gb = board
+        self.depth = 4
 
     def get_move(self, piece):
         moves = []
@@ -31,7 +32,7 @@ class AI:
         for col in valid_moves:
             pos = self.gb.drop_piece(col, piece)
             # score = self.score_position(piece) - self.opp_best_score_after_play(1-piece)
-            score = self.evaluate(piece, 2)
+            score = self.evaluate(piece, self.depth)
             print((col, score))
             if score > best_score:
                 best_score = score
@@ -115,44 +116,3 @@ class AI:
                     window.append(self.gb.board[r+i][c-i])
                 score += score_window(window, piece)
         return score
-
-    # TODO: MAKE MINIMAX WORK AT SOME POINT 🙏😭
-
-    # def game_over(self, pos):
-    #     return self.gb.check_win(settings.BOT + 1, pos) or self.gb.check_win(settings.PLAYER + 1, pos) or len(
-    #         self.gb.get_valid_moves()) == 0
-
-    # def evaluate(self, depth, alpha, beta, pos, is_maximizing):
-    #     moves = self.gb.get_valid_moves()
-    #     is_game_over = self.game_over(pos)
-    #     if depth == 0 or self.game_over(pos):
-    #         if is_game_over:
-    #             if self.gb.check_win(settings.BOT + 1, pos):
-    #                 return 1e7
-    #             elif self.gb.check_win(settings.PLAYER + 1, pos):
-    #                 return 1e7
-    #             else:
-    #                 return 0
-    #         else:
-    #             return self.score_position(settings.BOT)
-    #
-    #     if is_maximizing:
-    #         score = -math.inf
-    #         for move in moves:
-    #             new_pos = self.gb.drop_piece(move, settings.BOT)
-    #             score = max(score, self.evaluate(depth - 1, alpha, beta, new_pos, False))
-    #             self.gb.undo(new_pos)
-    #             alpha = max(alpha, score)
-    #             if alpha >= beta:
-    #                 break
-    #         return score
-    #     else:
-    #         score = math.inf
-    #         for move in moves:
-    #             new_pos = self.gb.drop_piece(move, settings.PLAYER)
-    #             score = min(score, self.evaluate(depth - 1, alpha, beta, new_pos, True))
-    #             self.gb.undo(new_pos)
-    #             beta = min(beta, score)
-    #             if alpha >= beta:
-    #                 break
-    #         return score
