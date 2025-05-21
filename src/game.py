@@ -23,8 +23,8 @@ PLAYER = settings.PLAYER
 BOT = settings.BOT
 
 players_rect = pygame.Rect(screen.get_rect().left, screen.get_rect().top, screen.get_rect().width, 1 * settings.HEIGHT_DIV)
-bot = utility.circle_crop_image(pygame.image.load("assets/images/robot.png").convert_alpha())
-person = utility.circle_crop_image(pygame.image.load("assets/images/you.png").convert_alpha())
+bot = utility.circle_crop_image(pygame.image.load(utility.resource_path("assets/robot.png")).convert_alpha())
+person = utility.circle_crop_image(pygame.image.load(utility.resource_path("assets/you.png")).convert_alpha())
 gb = Board()
 ai = AI(gb)
 executor = ThreadPoolExecutor(max_workers=2)

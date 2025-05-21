@@ -1,5 +1,4 @@
-import pygame
-import random
+import pygame, random, sys, os
 
 def circle_crop_image(image):
     size = image.get_size()
@@ -13,3 +12,9 @@ def random_color():
     return (random.randint(0, 255),
             random.randint(0, 255),
             random.randint(0, 255))
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and PyInstaller """
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.dirname(__file__), "..", relative_path)
