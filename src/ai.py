@@ -12,7 +12,7 @@ def score_window(window, piece):
         score += 5
 
     if window.count(opp + 1) == 4:
-        score -= 700
+        score -= 1000
     elif window.count(opp + 1) == 3 and window.count(0) == 1:
         score -= 100
     elif window.count(opp + 1) == 2 and window.count(0) == 2:
@@ -24,22 +24,6 @@ class AI:
         self.gb = board
         self.depth = 4
 
-    def get_move(self, piece):
-        moves = []
-        valid_moves = self.gb.get_valid_moves()
-        best_col = random.choice(valid_moves)
-        best_score = -math.inf
-        for col in valid_moves:
-            pos = self.gb.drop_piece(col, piece)
-            # score = self.score_position(piece) - self.opp_best_score_after_play(1-piece)
-            score = self.evaluate(piece, self.depth)
-            print((col, score))
-            if score > best_score:
-                best_score = score
-                best_col = col
-            self.gb.undo(pos)
-        return best_col
-
     def get_check_pos(self, col):
         c = 0
         while not self.gb.can_drop(c, col):
@@ -48,38 +32,78 @@ class AI:
                 return False
         return (c, col)
 
-    def evaluate(self, piece, depth):
+    # def get_move(self, piece):
+    #     moves = []
+    #     valid_moves = self.gb.get_valid_moves()
+    #     best_col = random.choice(valid_moves)
+    #     best_score = -math.inf
+    #     for col in valid_moves:
+    #         pos = self.gb.drop_piece(col, piece)
+    #         # score = self.score_position(piece) - self.opp_best_score_after_play(1-piece)
+    #         score = self.evaluate(piece, self.depth)
+    #         print((col, score))
+    #         if score > best_score:
+    #             best_score = score
+    #             best_col = col
+    #         self.gb.undo(pos)
+    #     return best_col
+    #
+    # def evaluate(self, piece, depth):
+    #     player_score = self.score_position(piece)
+    #     if depth == 0 or self.gb.return_game_over():
+    #         return player_score
+    #
+    #         #for opponent
+    #     opp_piece =  1 - piece
+    #     best_opp_score = -math.inf
+    #     valid_moves = self.gb.get_valid_moves()
+    #     # best_opp_col = 0
+    #     for col in valid_moves:
+    #         pos = self.gb.drop_piece(col, opp_piece)
+    #         score = self.evaluate(opp_piece, depth - 1)
+    #         if score > best_opp_score:
+    #             best_opp_score = score
+    #             # best_opp_col = col
+    #         self.gb.undo(pos)
+    #     return player_score - best_opp_score
+
+    def get_move(self, piece):
+        moves = []
+        valid_moves = self.gb.get_valid_moves()
+        best_col = random.choice(valid_moves)
+        best_score = -math.inf
+        for col in valid_moves:
+            pos = self.gb.drop_piece(col, piece)
+            # score = self.score_position(piece) - self.opp_best_score_after_play(1-piece)
+            score = self.evaluate(piece, self.depth, -math.inf, math.inf)
+            print((col, score))
+            if score > best_score:
+                best_score = score
+                best_col = col
+            self.gb.undo(pos)
+        return best_col
+
+    def evaluate(self, piece, depth, alpha, beta):
         player_score = self.score_position(piece)
         if depth == 0 or self.gb.return_game_over():
             return player_score
 
-            #for opponent
-        opp_piece =  1 - piece
+            # for opponent
+        opp_piece = 1 - piece
         best_opp_score = -math.inf
         valid_moves = self.gb.get_valid_moves()
         # best_opp_col = 0
         for col in valid_moves:
             pos = self.gb.drop_piece(col, opp_piece)
-            score = self.evaluate(opp_piece, depth - 1)
+            score = self.evaluate(opp_piece, depth - 1, -beta, -alpha)
             if score > best_opp_score:
-                best_opp_score = score
+                best_opp_score = score  # redundant ik but im keeping it for debug
                 # best_opp_col = col
             self.gb.undo(pos)
+            alpha = max(alpha, best_opp_score)
+            if beta <= alpha:
+                break
         return player_score - best_opp_score
-
-    def opp_best_score_after_play(self, piece):
-        best_score = -10e6
-        valid_moves = self.gb.get_valid_moves()
-        best_col = 0
-        for col in valid_moves:
-            pos = self.gb.drop_piece(col, piece)
-            score = self.score_position(piece)
-            if score > best_score:
-                best_score = score
-                best_col = col
-            self.gb.undo(pos)
-        #print(f"Opponent best move is {(best_col, best_score)}")
-        return best_score
 
     def score_position(self, piece):
         score = 0
@@ -116,3 +140,56 @@ class AI:
                     window.append(self.gb.board[r+i][c-i])
                 score += score_window(window, piece)
         return score
+
+    # def get_move(self, piece):
+    #     moves = []
+    #     valid_moves = self.gb.get_valid_moves()
+    #     best_col = random.choice(valid_moves)
+    #     best_score = -math.inf
+    #     for col in valid_moves:
+    #         pos = self.gb.drop_piece(col, piece)
+    #         # score = self.score_position(piece) - self.opp_best_score_after_play(1-piece)
+    #         score = self.evaluate(piece, self.depth, -math.inf, math.inf)
+    #         print((col, score))
+    #         if score > best_score:
+    #             best_score = score
+    #             best_col = col
+    #         self.gb.undo(pos)
+    #     return best_col
+    #
+    # def evaluate(self, piece, depth, alpha, beta):
+    #     player_score = self.score_position(piece)
+    #     if depth == 0 or self.gb.return_game_over():
+    #         return player_score
+    #
+    #         # for opponent
+    #     opp_piece = 1 - piece
+    #     best_opp_score = -math.inf
+    #     valid_moves = self.gb.get_valid_moves()
+    #     # best_opp_col = 0
+    #     for col in valid_moves:
+    #         pos = self.gb.drop_piece(col, opp_piece)
+    #         score = self.evaluate(opp_piece, depth - 1, -beta, -alpha)
+    #         if score > best_opp_score:
+    #             best_opp_score = score  # redundant ik but im keeping it for debug
+    #             # best_opp_col = col
+    #         self.gb.undo(pos)
+    #         alpha = max(alpha, best_opp_score)
+    #         if beta <= alpha:
+    #             break
+    #
+    #     return player_score - best_opp_score
+
+    # def opp_best_score_after_play(self, piece):
+    #     best_score = -10e6
+    #     valid_moves = self.gb.get_valid_moves()
+    #     best_col = 0
+    #     for col in valid_moves:
+    #         pos = self.gb.drop_piece(col, piece)
+    #         score = self.score_position(piece)
+    #         if score > best_score:
+    #             best_score = score
+    #             best_col = col
+    #         self.gb.undo(pos)
+    #     #print(f"Opponent best move is {(best_col, best_score)}")
+    #     return best_score
