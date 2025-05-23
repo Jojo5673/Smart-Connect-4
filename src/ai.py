@@ -8,25 +8,35 @@ def score_windows(windows, piece):
     pc = piece + 1
     opp = (1 - piece) + 1
 
-    piece_count = (windows == piece).sum(axis=1)
+    piece_count = (windows == pc).sum(axis=1)
     opp_count = (windows == opp).sum(axis=1)
+    zero_count = (windows == 0).sum(axis=1)
 
     score = np.zeros(len(windows))
-    score += (piece_count == 4) * 1500
-    score += (piece_count == 3) * 80
-    score += (piece_count == 2) * 5
+    score += (piece_count == 4) * (zero_count == 0) * 1500
+    score += (piece_count == 3) * (zero_count == 1) * 80
+    score += (piece_count == 2) * (zero_count == 2) * 5
 
-    score -= (opp_count == 4) * 1000
-    score -= (opp_count == 3) * 100
-    score -= (opp_count == 2)  * 7
+    score -= (opp_count == 4) * (zero_count == 0) * 1000
+    score -= (opp_count == 3) * (zero_count == 1) * 100
+    score -= (opp_count == 2) * (zero_count == 2) * 7
 
     return int(score.sum())
+
+
+def score_column(args):
+    board, piece, col, depth = args
+    ai = AI(board)
+    pos = ai.gb.drop_piece(col, piece)
+    score = ai.evaluate(piece, depth, -math.inf, math.inf)
+    ai.gb.undo(pos)
+    return col, score
 
 
 class AI:
     def __init__(self, board):
         self.gb = board
-        self.depth = 5
+        self.depth = 6
 
     def get_check_pos(self, col):
         c = 0
@@ -36,20 +46,22 @@ class AI:
                 return False
         return (c, col)
 
+
     def get_move(self, piece):
         valid_moves = self.gb.get_valid_moves()
         best_col = random.choice(valid_moves)
         best_score = -math.inf
-        for col in valid_moves:
-            pos = self.gb.drop_piece(col, piece)
-            # score = self.score_position(piece) - self.opp_best_score_after_play(1-piece)
-            score = self.evaluate(piece, self.depth, -math.inf, math.inf)
-            print((col, score))
-            if score > best_score:
-                best_score = score
-                best_col = col
-            self.gb.undo(pos)
+
+        args = [(copy.deepcopy(self.gb), piece, col, self.depth) for col in valid_moves]
+
+        with Pool(processes=min(len(valid_moves), os.cpu_count())) as pool:
+            results = pool.map(score_column, args)
+
+        best_col, best_score = max(results, key=lambda x: x[1])
+        for item in results:
+            print(item)
         return best_col
+
 
     def evaluate(self, piece, depth, alpha, beta):
         player_score = self.score_position(piece)
@@ -73,22 +85,22 @@ class AI:
                 break
         return player_score - best_opp_score
 
+
     def score_position(self, piece):
         score = 0
-        #score center column
+        # score center column
         center_col = self.gb.board[:, settings.CENTER_COL]
         center_count = (center_col == piece + 1) * 3
         score += int(center_count.sum())
-        #checks slices of 4 across the whole board
+        # checks slices of 4 across the whole self.gb.board
 
-        board = self.gb.board
-        horizontal_windows = sliding_window_view(board, (1, 4)).reshape(-1, 4)
-        vertical_windows = sliding_window_view(board, (4, 1)).reshape(-1, 4)
-        pos_diag = sliding_window_view(board, (4, 4))
+        horizontal_windows = sliding_window_view(self.gb.board, (1, 4)).reshape(-1, 4)
+        vertical_windows = sliding_window_view(self.gb.board, (4, 1)).reshape(-1, 4)
+        pos_diag = sliding_window_view(self.gb.board, (4, 4))
         pos_diag = np.array(
             [pos_diag[i, j].diagonal() for i in range(pos_diag.shape[0]) for j in range(pos_diag.shape[1])])
 
-        flipped = np.fliplr(board)
+        flipped = np.fliplr(self.gb.board)
         neg_diag = sliding_window_view(flipped, (4, 4))
         neg_diag = np.array(
             [neg_diag[i, j].diagonal() for i in range(neg_diag.shape[0]) for j in range(neg_diag.shape[1])])
@@ -99,9 +111,45 @@ class AI:
         return score
 
 
-
     #legacy code for reference
 #=================================================================================================================================
+    # def score_position(self, piece):
+    #     score = 0
+    #     #score center column
+    #     center_col = list(self.gb.board[:,settings.CENTER_COL])
+    #     score += center_col.count(piece + 1) * 3
+    #     #checks slices of 4 across the whole board
+    #     #horizontal
+    #     for row in self.gb.board:
+    #         for col in range(settings.BOARD_WIDTH - 3):
+    #             window = list(row[col:col+4])
+    #             score += score_window(window, piece)
+    #
+    #     #vertical
+    #     for c in range(settings.BOARD_WIDTH):
+    #         col = self.gb.board[:,c]
+    #         for row in range(settings.BOARD_HEIGHT - 3):
+    #             window = list(col[row:row+4])
+    #             score += score_window(window, piece)
+    #
+    #     #diagonal
+    #     for c in range(settings.BOARD_WIDTH - 3):
+    #         for r in range(settings.BOARD_HEIGHT - 3):
+    #             window = []
+    #             for i in range(4):
+    #                 window.append(self.gb.board[r+i][c+i])
+    #             score += score_window(window, piece)
+    #
+    #     #anti-diagonal
+    #     for c in range(settings.BOARD_WIDTH - 4, settings.BOARD_WIDTH):
+    #         for r in range(settings.BOARD_HEIGHT - 3):
+    #             window = []
+    #             for i in range(4):
+    #                 window.append(self.gb.board[r+i][c-i])
+    #             score += score_window(window, piece)
+    #     return score
+
+
 # def score_window(window, piece):
 #     opp = 1 - piece
 #     score = 0
@@ -121,50 +169,12 @@ class AI:
 #     return score
 
 
-# def score_position(self, piece):
-#     score = 0
-#     #score center column
-#     center_col = list(self.gb.board[:,settings.CENTER_COL])
-#     score += center_col.count(piece + 1) * 3
-#     #checks slices of 4 across the whole board
-#     #horizontal
-#     for row in self.gb.board:
-#         for col in range(settings.BOARD_WIDTH - 3):
-#             window = list(row[col:col+4])
-#             score += score_window(window, piece)
-#
-#     #vertical
-#     for c in range(settings.BOARD_WIDTH):
-#         col = self.gb.board[:,c]
-#         for row in range(settings.BOARD_HEIGHT - 3):
-#             window = list(col[row:row+4])
-#             score += score_window(window, piece)
-#
-#     #diagonal
-#     for c in range(settings.BOARD_WIDTH - 3):
-#         for r in range(settings.BOARD_HEIGHT - 3):
-#             window = []
-#             for i in range(4):
-#                 window.append(self.gb.board[r+i][c+i])
-#             score += score_window(window, piece)
-#
-#     #anti-diagonal
-#     for c in range(settings.BOARD_WIDTH - 4, settings.BOARD_WIDTH):
-#         for r in range(settings.BOARD_HEIGHT - 3):
-#             window = []
-#             for i in range(4):
-#                 window.append(self.gb.board[r+i][c-i])
-#             score += score_window(window, piece)
-#     return score
-
-
 # def get_move(self, piece):
 #     valid_moves = self.gb.get_valid_moves()
 #     best_col = random.choice(valid_moves)
 #     best_score = -math.inf
 #     for col in valid_moves:
 #         pos = self.gb.drop_piece(col, piece)
-#         # score = self.score_position(piece) - self.opp_best_score_after_play(1-piece)
 #         score = self.evaluate(piece, self.depth, -math.inf, math.inf)
 #         print((col, score))
 #         if score > best_score:
@@ -174,22 +184,7 @@ class AI:
 #     return best_col
 
 
-## def get_move(self, piece):
-#     moves = []
-#     valid_moves = self.gb.get_valid_moves()
-#     best_col = random.choice(valid_moves)
-#     best_score = -math.inf
-#     for col in valid_moves:
-#         pos = self.gb.drop_piece(col, piece)
-#         # score = self.score_position(piece) - self.opp_best_score_after_play(1-piece)
-#         score = self.evaluate(piece, self.depth)
-#         print((col, score))
-#         if score > best_score:
-#             best_score = score
-#             best_col = col
-#         self.gb.undo(pos)
-#     return best_col
-#
+
 # def evaluate(self, piece, depth):
 #     player_score = self.score_position(piece)
 #     if depth == 0 or self.gb.return_game_over():
@@ -208,6 +203,22 @@ class AI:
 #             # best_opp_col = col
 #         self.gb.undo(pos)
 #     return player_score - best_opp_score
+
+
+# def get_move(self, piece):
+#     valid_moves = self.gb.get_valid_moves()
+#     best_col = random.choice(valid_moves)
+#     best_score = -math.inf
+#     for col in valid_moves:
+#         pos = self.gb.drop_piece(col, piece)
+#         # score = self.score_position(piece) - self.opp_best_score_after_play(1-piece)
+#         score = self.evaluate(piece, self.depth, -math.inf, math.inf)
+#         print((col, score))
+#         if score > best_score:
+#             best_score = score
+#             best_col = col
+#         self.gb.undo(pos)
+#     return best_col
 
 
 # def opp_best_score_after_play(self, piece):
