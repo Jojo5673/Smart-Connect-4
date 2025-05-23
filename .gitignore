@@ -2,4 +2,3 @@ __pycache__/
 .idea
 build/
 game.spec
-debug
