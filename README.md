@@ -9,7 +9,8 @@ A single player **Connect 4** game built using **Python**, **Pygame**, and the *
 - AI opponent powered by a depth-limited minimax algorithm
 - Smart move scoring for blocking and winning
 - Pygame-powered GUI
-- Efficient move searching with alpha-beta optimization and multiprocessing of top-level moves 
+- Efficient move searching with alpha-beta optimization and multiprocessing of top-level moves
+- Efficient vectorized position scoring using numpy sliding window view array operations to evaluate all 1x4 windows horizontal, vertical and diagonal on the board simultaneously
 
 ## Using the project:
 ### Devs:
@@ -17,7 +18,9 @@ A single player **Connect 4** game built using **Python**, **Pygame**, and the *
 - Project files in src folder
 - Required packages: numpy, pygame
 
-### Anyone else:
+### Players:
 
-- download and run game.exe in the dist folder
+- Download and run game.exe in the dist folder
+- Choose a bot difficulty (tip: harder bots take longer to think)
+- Have fun
 

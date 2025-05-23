@@ -1,10 +1,6 @@
-import numpy as np
+import random, numpy as np
 import settings
-import random
 
-def draw_board(game_board):
-    print(np.flip(game_board, 0)) #makes the game play from bottom up like real connect 4
-    print(' ', *map(lambda i: str(i)+' ',list(range(len(game_board[0])))))  #draws the matrix of zeros with correct spacing
 
 class Board:
     def __init__(self):
@@ -12,15 +8,11 @@ class Board:
         self.screen_dims = settings.SCREEN_DIMS
         self.board =  np.zeros((self.height, self.width))
         self.game_over = False
-        self.turn = 1#random.choice((0, 1))
+        self.turn = random.choice((0, 1))
         self.msg = "Your turn" if self.turn == 0 else "Bot's turn"
 
     def can_drop(self, row, column):
-        #print(row - 1, column)
-        # try:
         return self.board[row][column] == 0 #tests if the board is empty at a position
-        # except IndexError:
-        #     return self.board[row][column] == 0
 
     def check_win(self, player, pos):
         # works by getting the location of the most recent move and its player and checking its immediate surroundings for the player's peices

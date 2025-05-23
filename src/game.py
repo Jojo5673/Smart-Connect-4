@@ -29,11 +29,11 @@ if __name__ == '__main__':
     person = utility.circle_crop_image(pygame.image.load(utility.resource_path("assets/you.png")).convert_alpha())
     gb = Board()
     ai = AI(gb)
+    working_depth = None
     executor = ThreadPoolExecutor(max_workers=2)
     future = None
 
-
-    def draw_button(msg):
+    def draw_button(msg, left=None, right=None, x_center=None):
         font = pygame.font.SysFont(None, 48)
         msg_image = font.render(msg, True, settings.TEXT_COLOR, settings.BTN_COLOR)
         msg_rect = msg_image.get_rect()
@@ -41,29 +41,56 @@ if __name__ == '__main__':
         width, height = msg_rect.width + settings.BTN_PADDING[0], msg_rect.height + settings.BTN_PADDING[1]
         color = settings.BTN_COLOR
         rect = pygame.Rect(0,0,width, height)
-        rect.center = (screen.get_rect().centerx, screen.get_rect().bottom - settings.HEIGHT_DIV // 2)
+        rect.centery = screen.get_rect().bottom - settings.HEIGHT_DIV // 2
+        if left is not None:
+            rect.left = left
+        elif right is not None:
+            rect.right = right
+        elif x_center is not None:
+            rect.centerx = x_center
+        else:
+            rect.centerx = screen.get_rect().centerx
 
         msg_rect.center = rect.center
         screen.fill(color, rect)
         screen.blit(msg_image, msg_rect)
         return rect
 
-    button_rect = draw_button("")
+    play_button = draw_button("")
+    rematch_button = draw_button("")
+    new_bot_button = draw_button("")
+    bot_choices = []
 
-    def check_button(mouse_x, mouse_y):
+    def check_buttons(mouse_x, mouse_y):
+        global working_depth
         global game_active, gb, hole_colors
-        button_clicked = button_rect.collidepoint(mouse_x, mouse_y)
-        if button_clicked:
+        if not game_active and play_button.collidepoint(mouse_x, mouse_y):
             game_active = True
+            gb = Board()
+            ai.depth = working_depth
+            hole_colors = []
+            draw_screen()
+        elif gb.game_over and rematch_button.collidepoint(mouse_x, mouse_y):
             gb = Board()
             hole_colors = []
             draw_screen()
+        elif gb.game_over and new_bot_button.collidepoint(mouse_x, mouse_y):
+            working_depth = None
+            game_active = False
+        elif not game_active:
+            for rect, depth in bot_choices:
+                if rect.collidepoint(mouse_x, mouse_y):
+                    working_depth = depth
 
-    def draw_message(msg):
+
+    def draw_message(msg,
+                     bg_col=settings.PLAYER_RECT_COLOR,
+                     txt_col=settings.TEXT_COLOR,
+                     center=(screen.get_rect().centerx, screen.get_rect().top + settings.HEIGHT_DIV // 2)):
         font = pygame.font.SysFont(None, 48)
-        msg_image = font.render(msg, True, settings.TEXT_COLOR, settings.PLAYER_RECT_COLOR)
+        msg_image = font.render(msg, True, txt_col, bg_col)
         msg_rect = msg_image.get_rect()
-        msg_rect.center = (screen.get_rect().centerx, screen.get_rect().top + settings.HEIGHT_DIV // 2)
+        msg_rect.center = center
         screen.blit(msg_image, msg_rect)
 
     def draw_fps():
@@ -86,6 +113,31 @@ if __name__ == '__main__':
         except TypeError:
          hole_colors[hole[0]][hole[1]] = settings.PLAYER_COLORS[gb.turn + 1]
 
+    def create_bot_choices():
+        global bot_choices
+        container_left = screen.get_rect().centerx - settings.SCREEN_DIMS[0] // 5 #choice rects are contained in
+        width = settings.SCREEN_DIMS[0] // 10
+        for i in range(4):
+            rect = pygame.Rect(container_left + i * width, 0, width, settings.HEIGHT_DIV)
+            rect.centery = settings.HEIGHT_DIV // 2
+            bot_choices.append((rect, i*2))
+
+    def draw_bot_select():
+        hdiv = settings.HEIGHT_DIV
+        screen_quarter = settings.SCREEN_DIMS[0]//4
+        padding = settings.PADDING
+        mouse_pos = pygame.mouse.get_pos()
+        i = 0
+        for rect, depth in bot_choices:
+            if rect.collidepoint(mouse_pos):
+                color = settings.PLAYER_RECT_COLOR_SELECTED
+            else:
+                color = settings.PLAYER_RECT_COLOR
+            pygame.draw.rect(screen, color, rect, border_radius=settings.PADDING)
+            bot_img = pygame.transform.scale(bot, (hdiv - 2 * padding, hdiv - 2 * padding))
+            pygame.draw.circle(screen, settings.BOT_LEVEL_COLORS[i], rect.center, hdiv // 2 - padding)
+            screen.blit(bot_img, bot_img.get_rect(center=rect.center))
+            i += 1
 
     def check_events():
         for event in pygame.event.get():
@@ -94,7 +146,7 @@ if __name__ == '__main__':
                 executor.shutdown()
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                check_button(*mouse_pos)
+                check_buttons(*mouse_pos)
                 if game_active and gb.turn == PLAYER:
                     for i, rect in enumerate(columns):
                         if rect.collidepoint(mouse_pos):
@@ -129,7 +181,6 @@ if __name__ == '__main__':
                 top += hdiv
                 hole_colors[j].append(bg_col)
             column = pygame.Rect(left, board_rect.top, hdiv, board_rect.height)
-            # screen.fill(random_color(), column)
             columns.append(column)
             left += hdiv
 
@@ -155,29 +206,30 @@ if __name__ == '__main__':
 
         for i, rect in enumerate(columns):
             if rect.collidepoint(mouse_pos):
-                color = (55, 118, 149)
+                color = settings.PLAYER_RECT_COLOR_SELECTED
             else:
-                color = (67, 146, 186)
+                color = settings.PLAYER_RECT_COLOR
             pygame.draw.rect(screen, color, rect, border_radius=padding)
             top = rect.top
             for j in range(b_height):
                 hole_color = hole_colors[b_height - 1 - j][i]
                 pygame.draw.circle(screen, hole_color, (rect.left + hdiv // 2, top + hdiv // 2), hdiv // 2 - padding / 2)
                 top += hdiv
+
         draw_fps()
 
     draw_screen()
     pygame.display.flip()
-
+    create_bot_choices()
     start, end = 0, 0
-
 
     while True:
         check_events()
         if game_active:
             if gb.game_over:
                 update_screen()
-                game_active = False
+                rematch_button = draw_button("Rematch", right=screen.get_rect().centerx - settings.BTN_PADDING[0])
+                new_bot_button = draw_button("New Bot", left=screen.get_rect().centerx + settings.BTN_PADDING[0])
             else:
                 update_screen()
                 if gb.turn == BOT:
@@ -193,6 +245,12 @@ if __name__ == '__main__':
                         future = None
             draw_message(gb.msg)
         else:
-            button_rect = draw_button("Play")
+            draw_screen()
+            draw_bot_select()
+            draw_message("Choose bot difficulty",
+                         bg_col=settings.BG_COLOR,
+                         center=(screen.get_rect().centerx, screen.get_rect().top + 3 * settings.HEIGHT_DIV // 2))
+            if working_depth is not None:
+                play_button = draw_button("Play")
         pygame.display.flip()
         clock.tick(settings.FPS)
