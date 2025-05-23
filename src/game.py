@@ -7,6 +7,7 @@ if __name__ == '__main__':
     from board import Board
     import utility
 
+
     pygame.init()
     pygame.display.set_caption("Connect 4")
     clock = pygame.time.Clock()

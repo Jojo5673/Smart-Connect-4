@@ -12,7 +12,7 @@ class Board:
         self.screen_dims = settings.SCREEN_DIMS
         self.board =  np.zeros((self.height, self.width))
         self.game_over = False
-        self.turn = random.choice((0, 1))
+        self.turn = 1#random.choice((0, 1))
         self.msg = "Your turn" if self.turn == 0 else "Bot's turn"
 
     def can_drop(self, row, column):
