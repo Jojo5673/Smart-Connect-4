@@ -7,7 +7,6 @@ from numpy.lib.stride_tricks import sliding_window_view
 def score_windows(windows, piece):
     pc = piece + 1
     opp = (1 - piece) + 1
-
     piece_count = (windows == pc).sum(axis=1)
     opp_count = (windows == opp).sum(axis=1)
     zero_count = (windows == 0).sum(axis=1)
@@ -20,9 +19,7 @@ def score_windows(windows, piece):
     score -= (opp_count == 4) * (zero_count == 0) * 1000
     score -= (opp_count == 3) * (zero_count == 1) * 100
     score -= (opp_count == 2) * (zero_count == 2) * 7
-
     return int(score.sum())
-
 
 def score_column(args):
     board, piece, col, depth = args
@@ -31,7 +28,6 @@ def score_column(args):
     score = ai.evaluate(piece, depth, -math.inf, math.inf)
     ai.gb.undo(pos)
     return col, score
-
 
 class AI:
     def __init__(self, board):
@@ -46,9 +42,14 @@ class AI:
                 return False
         return (c, col)
 
+    def get_ordered_moves(self, piece):
+        moves = self.gb.get_valid_moves()
+        center = settings.CENTER_COL
+        moves.sort(key=lambda col: abs(center-col)) #tries out center first to optimize alpha beta
+        return moves
 
     def get_move(self, piece):
-        valid_moves = self.gb.get_valid_moves()
+        valid_moves = self.get_ordered_moves(piece)
         best_col = random.choice(valid_moves)
         best_score = -math.inf
 
@@ -71,7 +72,7 @@ class AI:
             # for opponent
         opp_piece = 1 - piece
         best_opp_score = -math.inf
-        valid_moves = self.gb.get_valid_moves()
+        valid_moves = self.get_ordered_moves(piece)
         # best_opp_col = 0
         for col in valid_moves:
             pos = self.gb.drop_piece(col, opp_piece)
