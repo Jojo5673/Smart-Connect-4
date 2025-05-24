@@ -1,5 +1,6 @@
 __pycache__/
-.idea
+.idea/
 build
 game.spec
 debug
+.gitignore
