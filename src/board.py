@@ -1,6 +1,11 @@
 import random, numpy as np
 import settings
 
+#turn alternates between 0 and 1
+#pieces on the board are turn + 1
+# (yes this is a confusing system that could have easily been made consistent)
+# (yes there are dozens of methods to make this consistent and i didnt think of any when i started this part months ago)
+# (yes im too lazy to change it)
 
 class Board:
     def __init__(self):
@@ -41,11 +46,10 @@ class Board:
             search = True
             step_pos = pos
             depth = 0
-            while search:
+            #we are going to search forward and backward along a step vector to see if the piece we drop connects any 4 in a rows
+            while search: #searches forward along a step vector
                 # a new board position is created for testing by adding the direction vector to the start position
                 step_pos = (step_pos[0] + step[0], step_pos[1] + step[1])
-                # print(step_pos)
-                # if step_pos[0] != self.height - 1 and step_pos[1] != self.width - 1:
                 if check_at(step_pos):  # if the player is found at the new position the length of the connect is incremented
                     depth += 1
                 else:
@@ -55,7 +59,7 @@ class Board:
             step_pos = pos
             depth = 0
             search = True
-            while search:
+            while search: #searches backward along a step vector
                 step_pos = (step_pos[0] - step[0], step_pos[1] - step[1])
                 if check_at(step_pos):
                     depth += 1
@@ -75,13 +79,14 @@ class Board:
         self.board[c][col] = piece+1 #places the value of the player at the drop position  # alternates the turn between 0 and 1
         return (c,col)
         #returns the location of the dropped piece if its a valid move else false
-    def undo (self, pos):
+
+    def undo (self, pos): #used for resetting the boards after the ai explores them
         self.board[pos[0]][pos[1]] = 0
 
     def get_valid_moves(self):
         moves = []
         for col in range(self.width):
-            piece = self.drop_piece(col, self.turn)
+            piece = self.drop_piece(col, self.turn) #if you can drop the piece it's a valid move fr
             if piece:
                 moves.append(col)
                 self.undo(piece)
@@ -92,20 +97,18 @@ class Board:
         valid_moves = self.get_valid_moves()
         if not valid_moves:
             self.game_over = True
-            self.msg = "Draw"
+            self.msg = "Draw" #ends the game when you draw
         drop = self.drop_piece(selection, self.turn) #stores the position of the dropped piece
         if not drop:
             print("invalid move") #if drop returns false the move is invalud
         else:
             if self.check_win(self.turn + 1, drop): #checks every dropped piece for a winning move
-                #self.draw_board(self.board)
                 self.msg = f"You win" if self.turn == 0 else f"You lose"
                 print(f"You win at {drop}" if self.turn == 0 else f"You lose at {drop}")
-                self.game_over = True
+                self.game_over = True #ends the game when you win or lose
             else:
                 self.msg = "Your turn" if self.turn == 1 else "Bot's turn"
-            self.turn = (self.turn + 1) % 2
-            #self.draw_board(self.board)
+            self.turn = (self.turn + 1) % 2 #cycles the turn between 0 and 1
         return drop
 
     def return_game_over(self):
